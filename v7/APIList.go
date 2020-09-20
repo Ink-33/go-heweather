@@ -60,7 +60,7 @@ func NewRealTimeWeatherClient(location string) (Client HeWeatherAPI) {
 }
 
 //NewWeatherForecastClient 创建一个天气预报查询实例。
-//你需要在https://dev.heweather.com/docs/api/weather查询指定的Duration，
+//你需要在 https://dev.heweather.com/docs/api/weather 查询指定的Duration，
 //如3d，24h
 func NewWeatherForecastClient(location string, duration string) (Client HeWeatherAPI, err error) {
 	d := []string{"3d", "7d", "10d", "15d", "24h", "72h", "168h"}

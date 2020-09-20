@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -43,8 +44,8 @@ func NewCredential(publicID, key string, isBussiness bool) (credential *Credenti
 }
 
 func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
-	map1 := mapBuilder(*config)
-	var map2 map[string]string
+	map1 := mapBuilder(config)
+	var map2 = make(map[string]string, 0)
 	for k, v := range map1 {
 		if map2[k] == "" {
 			map2[k] = v
@@ -55,7 +56,7 @@ func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig)
 			map2[k] = v
 		}
 	}
-	paramstr, signature := GetSignature(credential.Key, map2)
+	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
 	urlstr := urlBuilder(c.GetURL(credential), c.Name, c.SubName) + "?" + paramstr + "&sign=" + signature
 	result, err := httpClient(urlstr)
 	if err != nil {
@@ -66,22 +67,22 @@ func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig)
 
 func (c *universeHeWeatherAPI) GetURL(credential *Credential) (URL string) {
 	if credential.IsBussiness {
-		return "https://api.heweather.net/v7/"
+		return "https://api.heweather.net/v7"
 	}
-	return "https://devapi.heweather.net/v7/"
+	return "https://devapi.heweather.net/v7"
 
 }
 
 func (c *geoAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
-	map1 := mapBuilder(*config)
-	var map2 map[string]string
+	map1 := mapBuilder(config)
+	var map2 = make(map[string]string, 0)
 	for k, v := range map1 {
 		if map2[k] == "" {
 			map2[k] = v
 		}
 	}
 	map2["location"] = c.Locaton
-	paramstr, signature := GetSignature(credential.Key, map2)
+	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
 	urlstr := urlBuilder(c.GetURL(), c.Name, c.SubName) + "?" + paramstr + "&sign=" + signature
 	result, err := httpClient(urlstr)
 	if err != nil {
@@ -97,29 +98,37 @@ func (c *geoAPI) GetURL() (URL string) {
 func urlBuilder(url, name, subName string) string {
 	return fmt.Sprintf("%s/%s/%s", url, name, subName)
 }
-func mapBuilder(config ClientConfig) (param map[string]string) {
-	rv := reflect.ValueOf(config)
-	rt := reflect.TypeOf(config)
+func mapBuilder(config *ClientConfig) (param map[string]string) {
+	p := make(map[string]string)
+	if config == nil {
+		return
+	}
+	c := *config
+	rv := reflect.ValueOf(c)
+	rt := reflect.TypeOf(c)
 	num := rv.NumField()
 	for i := 0; i < num; i++ {
-		param[rt.Field(i).Tag.Get("HeWea")] = rv.Field(i).String()
+		p[rt.Field(i).Tag.Get("HeWea")] = rv.Field(i).String()
 	}
-	return
+	return p
 }
 
 //GetSignature 和风天气签名生成算法-Golang版本
-func GetSignature(key string, param map[string]string) (paramstr, signature string) {
+func GetSignature(publicID, key string, param map[string]string) (paramstr, signature string) {
 	sa := []string{}
 	for k, v := range param {
 		if v != "" {
 			sa = append(sa, k+"="+v)
 		}
 	}
+	sa = append(sa, "t="+strconv.FormatInt(time.Now().Unix(), 10))
+	sa = append(sa, "username="+publicID)
 	sort.Strings(sa)
 	paramstr = strings.Join(sa, "&")
 	md5c := md5.New()
 	md5c.Reset()
-	return paramstr, fmt.Sprintf("%x", md5c.Sum([]byte(paramstr+key)))
+	md5c.Write([]byte(paramstr + key))
+	return paramstr, fmt.Sprintf("%x", md5c.Sum(nil))
 }
 
 func httpClient(address string) (result string, err error) {
