@@ -22,9 +22,9 @@ type universeHeWeatherAPI struct {
 	Parameter map[string]string
 }
 type geoAPI struct {
-	Name    string
-	SubName string
-	Locaton string
+	Name      string
+	SubName   string
+	Parameter map[string]string
 }
 
 //NewClientErr 创建查询实例时返回的错误
@@ -36,13 +36,50 @@ func (e *NewClientErr) Error() string {
 	return e.Reason
 }
 
-//NewGeoClient 创建一个城市信息搜索实例
-//https://dev.heweather.com/docs/api/geo
-func NewGeoClient(location string) (Client HeWeaGeoAPI) {
+//NewGeoCityClient 创建一个城市信息搜索实例。
+//https://dev.heweather.com/docs/api/geo#%E5%9F%8E%E5%B8%82%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
+func NewGeoCityClient(location string) (Client HeWeaGeoAPI) {
+	p := map[string]string{"location": location}
+	Client = &geoAPI{
+		Name:      "city",
+		SubName:   "lookup",
+		Parameter: p,
+	}
+	return
+}
+
+//NewGeoTopCityClient 创建一个热门城市查询实例。
+//https://dev.heweather.com/docs/api/geo#%E7%83%AD%E9%97%A8%E5%9F%8E%E5%B8%82%E6%9F%A5%E8%AF%A2
+func NewGeoTopCityClient() (Client HeWeaGeoAPI) {
 	Client = &geoAPI{
 		Name:    "city",
-		SubName: "lookup",
-		Locaton: location,
+		SubName: "top",
+	}
+	return
+}
+
+//NewGeoPOIClient 创建一个POI信息搜索实例。
+//当前POItype仅限景点。例如scenic
+//https://dev.heweather.com/docs/api/geo#poi%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
+func NewGeoPOIClient(location string, POItype string) (Client HeWeaGeoAPI) {
+	p := map[string]string{"location": location, "type": POItype}
+	Client = &geoAPI{
+		Name:      "poi",
+		SubName:   "lookup",
+		Parameter: p,
+	}
+	return
+}
+
+//NewGeoPOIRangeClient 创建一个POI范围搜索实例。
+//当前POItype仅限景点。例如scenic
+//https://dev.heweather.com/docs/api/geo#poi%E8%8C%83%E5%9B%B4%E6%90%9C%E7%B4%A2
+func NewGeoPOIRangeClient(location string, POItype string) (Client HeWeaGeoAPI) {
+	p := map[string]string{"location": location, "type": POItype}
+	Client = &geoAPI{
+		Name:      "poi",
+		SubName:   "range",
+		Parameter: p,
 	}
 	return
 }

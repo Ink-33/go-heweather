@@ -14,9 +14,9 @@ import (
 
 //Credential 和风天气凭证
 type Credential struct {
-	PublicID    string
-	Key         string
-	IsBussiness bool
+	PublicID   string
+	Key        string
+	IsBusiness bool
 }
 
 //ClientConfig 用于配置天气API的各种配置
@@ -34,11 +34,11 @@ type ClientConfig struct {
 }
 
 //NewCredential 创建一个和风天气凭证
-func NewCredential(publicID, key string, isBussiness bool) (credential *Credential) {
+func NewCredential(publicID, key string, isBusiness bool) (credential *Credential) {
 	credential = &Credential{
-		PublicID:    publicID,
-		Key:         key,
-		IsBussiness: isBussiness,
+		PublicID:   publicID,
+		Key:        key,
+		IsBusiness: isBusiness,
 	}
 	return
 }
@@ -66,7 +66,7 @@ func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig)
 }
 
 func (c *universeHeWeatherAPI) GetURL(credential *Credential) (URL string) {
-	if credential.IsBussiness {
+	if credential.IsBusiness {
 		return "https://api.heweather.net/v7"
 	}
 	return "https://devapi.heweather.net/v7"
@@ -81,7 +81,11 @@ func (c *geoAPI) Run(credential *Credential, config *ClientConfig) (Result strin
 			map2[k] = v
 		}
 	}
-	map2["location"] = c.Locaton
+	for k, v := range c.Parameter {
+		if map2[k] == "" {
+			map2[k] = v
+		}
+	}
 	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
 	urlstr := urlBuilder(c.GetURL(), c.Name, c.SubName) + "?" + paramstr + "&sign=" + signature
 	result, err := httpClient(urlstr)
