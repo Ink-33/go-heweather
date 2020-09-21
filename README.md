@@ -7,7 +7,7 @@
 # 简介
 欢迎使用go-heweather！  
 本SDK基于和风天气WebAPI V7而制作，方便Go开发者快速调用和风天气API。  
-您亦可在GoDoc(https://pkg.go.dev/mod/github.com/Ink-33/go-heweather)上浏览本SDK的文档，在`package`中选择v7即可浏览和风天气v7的相关文档。
+您亦可在GoDoc[here](https://pkg.go.dev/mod/github.com/Ink-33/go-heweather) 上浏览本SDK的文档，在`package`中选择v7即可浏览和风天气v7的相关文档。
 
 # 开始使用
 使用本SDK，您需要一个和风天气WebAPI的安全凭证。可前往[和风天气开发平台](https://dev.heweather.com/)获取您的安全凭证。
