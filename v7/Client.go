@@ -45,7 +45,7 @@ func NewCredential(publicID, key string, isBusiness bool) (credential *Credentia
 
 func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
 	map1 := mapBuilder(config)
-	var map2 = make(map[string]string, 0)
+	var map2 = make(map[string]string)
 	for k, v := range map1 {
 		if map2[k] == "" {
 			map2[k] = v
@@ -67,15 +67,15 @@ func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig)
 
 func (c *universeHeWeatherAPI) GetURL(credential *Credential) (URL string) {
 	if credential.IsBusiness {
-		return "https://api.heweather.net/v7"
+		return "https://api.qweather.net/v7"
 	}
-	return "https://devapi.heweather.net/v7"
+	return "https://devapi.qweather.net/v7"
 
 }
 
 func (c *geoAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
 	map1 := mapBuilder(config)
-	var map2 = make(map[string]string, 0)
+	var map2 = make(map[string]string)
 	for k, v := range map1 {
 		if map2[k] == "" {
 			map2[k] = v
@@ -96,7 +96,7 @@ func (c *geoAPI) Run(credential *Credential, config *ClientConfig) (Result strin
 }
 
 func (c *geoAPI) GetURL() (URL string) {
-	return "https://geoapi.heweather.net/v2/"
+	return "https://geoapi.qweather.net/v2/"
 }
 
 func urlBuilder(url, name, subName string) string {
@@ -131,7 +131,7 @@ func GetSignature(publicID, key string, param map[string]string) (paramstr, sign
 	paramstr = strings.Join(sa, "&")
 	md5c := md5.New()
 	md5c.Reset()
-	md5c.Write([]byte(paramstr + key))
+	_, _ = md5c.Write([]byte(paramstr + key))
 	return paramstr, fmt.Sprintf("%x", md5c.Sum(nil))
 }
 

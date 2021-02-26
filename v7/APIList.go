@@ -169,7 +169,7 @@ func NewWarningListClient(WarningRange string) (Client HeWeatherAPI) {
 	p := map[string]string{"range": WarningRange}
 	Client = &universeHeWeatherAPI{
 		Name:      "warning",
-		SubName:   "now",
+		SubName:   "list",
 		Parameter: p,
 	}
 	return
