@@ -77,7 +77,6 @@ func httpClient(address string, timeout time.Duration) (result string, err error
 	if err != nil {
 		return "", err
 	}
-	req.Proto = "HTTP/1.1"
 	req.Header.Add("User-Agent", "go-heweather SDK")
 	rep, err := httpc.Do(req)
 	if err != nil {
@@ -85,6 +84,7 @@ func httpClient(address string, timeout time.Duration) (result string, err error
 	}
 	defer rep.Body.Close()
 	content, err := io.ReadAll(rep.Body)
+	println(rep.Proto, rep.Status)
 	if err != nil {
 		return "", err
 	}
