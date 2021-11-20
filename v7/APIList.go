@@ -1,33 +1,26 @@
 package v7
 
-//HeWeatherAPI 和风天气v7API通用接口
-type HeWeatherAPI interface {
-	//Run 执行API
-	Run(credential *Credential, config *ClientConfig) (Result string, err error)
-	//GetURL 获取API链接
-	GetURL(credential *Credential) (URL string)
-}
+import "time"
 
-//HeWeaGeoAPI 和风天气城市信息搜索接口
-type HeWeaGeoAPI interface {
-	//Run 执行API
-	Run(credential *Credential, config *ClientConfig) (Result string, err error)
-	//GetURL 获取API链接
-	GetURL() (URL string)
+// HeWeatherAPI 和风天气v7API通用接口
+type HeWeatherAPI interface {
+	// Run 执行API
+	Run(credential *Credential) (Result string, err error)
+	// GetURL 获取API链接
+	GetURL(credential *Credential) (URL string)
+	// SetAPIConfig 设置API配置
+	SetAPIConfig(config *APIConfig)
 }
 
 type universeHeWeatherAPI struct {
 	Name      string
 	SubName   string
 	Parameter map[string]string
-}
-type geoAPI struct {
-	Name      string
-	SubName   string
-	Parameter map[string]string
+	APIConfig *APIConfig
+	isGeo     bool
 }
 
-//NewClientErr 创建查询实例时返回的错误
+// NewClientErr 创建查询实例时返回的错误
 type NewClientErr struct {
 	Reason string
 }
@@ -36,73 +29,79 @@ func (e *NewClientErr) Error() string {
 	return e.Reason
 }
 
-//NewGeoCityClient 创建一个城市信息搜索实例。
-//https://dev.heweather.com/docs/api/geo#%E5%9F%8E%E5%B8%82%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
-func NewGeoCityClient(location string) (Client HeWeaGeoAPI) {
-	p := map[string]string{"location": location}
-	Client = &geoAPI{
+// SetAPIConfig 设置API配置
+func (u *universeHeWeatherAPI) SetAPIConfig(config *APIConfig) {
+	u.APIConfig = config
+}
+
+// NewGeoCityClient 创建一个城市信息搜索实例。
+// https://dev.heweather.com/docs/api/geo#%E5%9F%8E%E5%B8%82%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
+func NewGeoCityClient(location string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "city",
 		SubName:   "lookup",
-		Parameter: p,
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     true,
 	}
-	return
 }
 
-//NewGeoTopCityClient 创建一个热门城市查询实例。
-//https://dev.heweather.com/docs/api/geo#%E7%83%AD%E9%97%A8%E5%9F%8E%E5%B8%82%E6%9F%A5%E8%AF%A2
-func NewGeoTopCityClient() (Client HeWeaGeoAPI) {
-	Client = &geoAPI{
-		Name:    "city",
-		SubName: "top",
+// NewGeoTopCityClient 创建一个热门城市查询实例。
+// https://dev.heweather.com/docs/api/geo#%E7%83%AD%E9%97%A8%E5%9F%8E%E5%B8%82%E6%9F%A5%E8%AF%A2
+func NewGeoTopCityClient() (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
+		Name:      "city",
+		SubName:   "top",
+		Parameter: map[string]string{},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     true,
 	}
-	return
 }
 
-//NewGeoPOIClient 创建一个POI信息搜索实例。
-//当前POItype仅限景点。例如scenic
-//https://dev.heweather.com/docs/api/geo#poi%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
-func NewGeoPOIClient(location string, POItype string) (Client HeWeaGeoAPI) {
-	p := map[string]string{"location": location, "type": POItype}
-	Client = &geoAPI{
+// NewGeoPOIClient 创建一个POI信息搜索实例。
+// 当前POItype仅限景点。例如scenic
+// https://dev.heweather.com/docs/api/geo#poi%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
+func NewGeoPOIClient(location string, poiType string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "poi",
 		SubName:   "lookup",
-		Parameter: p,
+		Parameter: map[string]string{"location": location, "type": poiType},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     true,
 	}
-	return
 }
 
-//NewGeoPOIRangeClient 创建一个POI范围搜索实例。
-//当前POItype仅限景点。例如scenic
-//https://dev.heweather.com/docs/api/geo#poi%E8%8C%83%E5%9B%B4%E6%90%9C%E7%B4%A2
-func NewGeoPOIRangeClient(location string, POItype string) (Client HeWeaGeoAPI) {
-	p := map[string]string{"location": location, "type": POItype}
-	Client = &geoAPI{
+// NewGeoPOIRangeClient 创建一个POI范围搜索实例。
+// 当前POItype仅限景点。例如scenic
+// https://dev.heweather.com/docs/api/geo#poi%E8%8C%83%E5%9B%B4%E6%90%9C%E7%B4%A2
+func NewGeoPOIRangeClient(location string, poiType string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "poi",
 		SubName:   "range",
-		Parameter: p,
+		Parameter: map[string]string{"location": location, "type": poiType},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     true,
 	}
-	return
 }
 
-//NewRealTimeWeatherClient 创建一个实况天气查询实例。
-//https://dev.heweather.com/docs/api/weather
-func NewRealTimeWeatherClient(location string) (Client HeWeatherAPI) {
-	p := map[string]string{"location": location}
-	Client = &universeHeWeatherAPI{
+// NewRealTimeWeatherClient 创建一个实况天气查询实例。
+// https://dev.heweather.com/docs/api/weather
+func NewRealTimeWeatherClient(location string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "weather",
 		SubName:   "now",
-		Parameter: p,
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
 	}
-	return
 }
 
-//NewWeatherForecastClient 创建一个天气预报查询实例。
-//你需要在 https://dev.heweather.com/docs/api/weather 查询指定的Duration，
-//如3d，24h
-func NewWeatherForecastClient(location string, duration string) (Client HeWeatherAPI, err error) {
+// NewWeatherForecastClient 创建一个天气预报查询实例。
+// 你需要在 https://dev.heweather.com/docs/api/weather 查询指定的Duration，
+// 如3d，24h
+func NewWeatherForecastClient(location string, duration string) (client HeWeatherAPI, err error) {
 	d := []string{"3d", "7d", "10d", "15d", "24h", "72h", "168h"}
-	p := map[string]string{"location": location}
-	var dr string = ""
+	dr := ""
 	for _, v := range d {
 		if duration == v {
 			dr = duration
@@ -113,126 +112,127 @@ func NewWeatherForecastClient(location string, duration string) (Client HeWeathe
 		err = &NewClientErr{Reason: "Invalid duration: " + duration}
 		return nil, err
 	}
-	Client = &universeHeWeatherAPI{
+	return &universeHeWeatherAPI{
 		Name:      "weather",
 		SubName:   dr,
-		Parameter: p,
-	}
-	return
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
+	}, nil
 }
 
-//NewMinutelyClient 创建一个分钟级降水查询实例。
-//https://dev.heweather.com/docs/api/minutely
-func NewMinutelyClient(location string) (Client HeWeatherAPI) {
-	p := map[string]string{"location": location}
-	Client = &universeHeWeatherAPI{
+// NewMinutelyClient 创建一个分钟级降水查询实例。
+// https://dev.heweather.com/docs/api/minutely
+func NewMinutelyClient(location string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "minutely",
 		SubName:   "5m",
-		Parameter: p,
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
 	}
-	return
 }
 
-//NewAirQualityClient 创建一个空气质量查询实例。
-//duration仅支持 now,5d
-//https://dev.heweather.com/docs/api/air
-func NewAirQualityClient(location, duration string) (Client HeWeatherAPI, err error) {
-	p := map[string]string{"location": location}
+// NewAirQualityClient 创建一个空气质量查询实例。
+// duration仅支持 now,5d
+// https://dev.heweather.com/docs/api/air
+func NewAirQualityClient(location, duration string) (client HeWeatherAPI, err error) {
 	if duration != "5d" && duration != "now" {
 		err = &NewClientErr{Reason: "Invalid duration: " + duration}
 		return nil, err
 	}
-	Client = &universeHeWeatherAPI{
+	return &universeHeWeatherAPI{
 		Name:      "air",
 		SubName:   duration,
-		Parameter: p,
-	}
-	return
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
+	}, nil
 }
 
-//NewWarningClient 创建一个灾害预警查询实例。
-//https://dev.heweather.com/docs/api/warning
-func NewWarningClient(location string) (Client HeWeatherAPI) {
-	p := map[string]string{"location": location}
-	Client = &universeHeWeatherAPI{
+// NewWarningClient 创建一个灾害预警查询实例。
+// https://dev.heweather.com/docs/api/warning
+func NewWarningClient(location string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "warning",
 		SubName:   "now",
-		Parameter: p,
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
 	}
-	return
 }
 
-//NewWarningListClient 创建一个灾害预警城市列表查询实例。
-//当前WarningRange仅支持cn
-//https://dev.heweather.com/docs/api/warning
-func NewWarningListClient(WarningRange string) (Client HeWeatherAPI) {
-	p := map[string]string{"range": WarningRange}
-	Client = &universeHeWeatherAPI{
+// NewWarningListClient 创建一个灾害预警城市列表查询实例。
+// 当前WarningRange仅支持cn
+// https://dev.qeweather.com/docs/api/warning
+func NewWarningListClient(warningRange string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "warning",
 		SubName:   "list",
-		Parameter: p,
+		Parameter: map[string]string{"range": warningRange},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
 	}
-	return
 }
 
-//NewLiveIndexClient 创建一个生活指数查询实例。
-//https://dev.heweather.com/docs/api/indices
-func NewLiveIndexClient(location, indexType, duration string) (Client HeWeatherAPI, err error) {
-	p := map[string]string{"location": location, "type": indexType}
+// NewLiveIndexClient 创建一个生活指数查询实例。
+// https://dev.heweather.com/docs/api/indices
+func NewLiveIndexClient(location, indexType, duration string) (client HeWeatherAPI, err error) {
 	if duration != "1d" && duration != "3d" {
 		err = &NewClientErr{Reason: "Invalid duration: " + duration}
 		return nil, err
 	}
-	Client = &universeHeWeatherAPI{
+	return &universeHeWeatherAPI{
 		Name:      "indices",
 		SubName:   duration,
-		Parameter: p,
-	}
-	return
+		Parameter: map[string]string{"location": location, "type": indexType},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
+	}, nil
 }
 
-//NewWeatherPOIClient 创建一个景区天气查询实例。
-//https://dev.heweather.com/docs/api/weather-poi
-func NewWeatherPOIClient(location, duration string) (Client HeWeatherAPI, err error) {
-	p := map[string]string{"location": location}
+// NewWeatherPOIClient 创建一个景区天气查询实例。
+// https://dev.heweather.com/docs/api/weather-poi
+func NewWeatherPOIClient(location, duration string) (client HeWeatherAPI, err error) {
 	if duration != "7d" && duration != "now" {
 		err = &NewClientErr{Reason: "Invalid duration: " + duration}
 		return nil, err
 	}
-	Client = &universeHeWeatherAPI{
+	return &universeHeWeatherAPI{
 		Name:      "weather-poi",
 		SubName:   duration,
-		Parameter: p,
-	}
-	return
+		Parameter: map[string]string{"location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
+	}, nil
 }
 
-//NewHistoricalClient 创建一个历史数据查询实例。
-//historicalType支持传入weather，air
-//https://dev.heweather.com/docs/api/historical
-func NewHistoricalClient(location, date, historicalType string) (Client HeWeatherAPI, err error) {
+// NewHistoricalClient 创建一个历史数据查询实例。
+// historicalType支持传入weather，air
+// https://dev.heweather.com/docs/api/historical
+func NewHistoricalClient(location, date, historicalType string) (client HeWeatherAPI, err error) {
 	if historicalType != "weather" && historicalType != "air" {
 		err = &NewClientErr{Reason: "Invalid historicalType: " + historicalType}
 		return nil, err
 	}
-	p := map[string]string{"date": date, "location": location}
-	Client = &universeHeWeatherAPI{
+	return &universeHeWeatherAPI{
 		Name:      "historical",
 		SubName:   historicalType,
-		Parameter: p,
-	}
-	return
+		Parameter: map[string]string{"date": date, "location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
+	}, nil
 }
 
-//NewSunandMoonClient 创建一个日出日落、月升月落和月相查询实例。
-//historicalType支持传入weather，air
-//https://dev.heweather.com/docs/api/astronomy
-func NewSunandMoonClient(location, date string) (Client HeWeatherAPI) {
-	p := map[string]string{"date": date, "location": location}
-	Client = &universeHeWeatherAPI{
+// NewSunandMoonClient 创建一个日出日落、月升月落和月相查询实例。
+// historicalType支持传入weather，air
+// https://dev.heweather.com/docs/api/astronomy
+func NewSunandMoonClient(location, date string) (client HeWeatherAPI) {
+	return &universeHeWeatherAPI{
 		Name:      "astronomy",
 		SubName:   "sunmoon",
-		Parameter: p,
+		Parameter: map[string]string{"date": date, "location": location},
+		APIConfig: &APIConfig{Timeout: 15 * time.Second},
+		isGeo:     false,
 	}
-	return
 }

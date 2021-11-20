@@ -5,35 +5,78 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
 
-//Credential 和风天气凭证
+// Credential 和风天气凭证
 type Credential struct {
 	PublicID   string
 	Key        string
 	IsBusiness bool
 }
 
-//ClientConfig 用于配置天气API的各种配置
-type ClientConfig struct {
-	//通用-lang
-	Language string `HeWea:"lang"`
-	//部分天气API-unit
-	Unit string `HeWea:"unit"`
-	//城市信息搜索-adm
-	Adm string `HeWea:"adm"`
-	//城市信息搜索-range
-	Range string `HeWea:"range"`
-	//城市信息搜索-number
-	Number string `HeWea:"number"`
+// APIConfig 用于配置天气API的各种配置
+type APIConfig struct {
+	p       map[string]string // 参数
+	Timeout time.Duration     // 超时时间
 }
 
-//NewCredential 创建一个和风天气凭证
+// NewAPIConfig 创建一个API配置
+func NewAPIConfig() *APIConfig {
+	return &APIConfig{
+		p: make(map[string]string),
+	}
+}
+
+// SetLanguage 设置语言
+func (c *APIConfig) SetLanguage(lang string) {
+	if c.p == nil {
+		c.p = make(map[string]string)
+	}
+	c.p["lang"] = lang
+}
+
+// SetUnit 设置单位
+func (c *APIConfig) SetUnit(unit string) {
+	if c.p == nil {
+		c.p = make(map[string]string)
+	}
+	c.p["unit"] = unit
+}
+
+// SetAdm 设置行政区划
+func (c *APIConfig) SetAdm(adm string) {
+	if c.p == nil {
+		c.p = make(map[string]string)
+	}
+	c.p["adm"] = adm
+}
+
+// SetRange 设置范围
+func (c *APIConfig) SetRange(rangeStr string) {
+	if c.p == nil {
+		c.p = make(map[string]string)
+	}
+	c.p["range"] = rangeStr
+}
+
+// SetNumber 设置数量
+func (c *APIConfig) SetNumber(number string) {
+	if c.p == nil {
+		c.p = make(map[string]string)
+	}
+	c.p["number"] = number
+}
+
+// SetTimeout 设置超时时间
+func (c *APIConfig) SetTimeout(timeout time.Duration) {
+	c.Timeout = timeout
+}
+
+// NewCredential 创建一个和风天气凭证
 func NewCredential(publicID, key string, isBusiness bool) (credential *Credential) {
 	credential = &Credential{
 		PublicID:   publicID,
@@ -43,81 +86,42 @@ func NewCredential(publicID, key string, isBusiness bool) (credential *Credentia
 	return
 }
 
-func (c *universeHeWeatherAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
-	map1 := mapBuilder(config)
+func (u *universeHeWeatherAPI) Run(credential *Credential) (result string, err error) {
+	map1 := u.APIConfig.p
 	var map2 = make(map[string]string)
 	for k, v := range map1 {
 		if map2[k] == "" {
 			map2[k] = v
 		}
 	}
-	for k, v := range c.Parameter {
+	for k, v := range u.Parameter {
 		if map2[k] == "" {
 			map2[k] = v
 		}
 	}
 	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
-	urlstr := urlBuilder(c.GetURL(credential), c.Name, c.SubName) + "?" + paramstr + "&sign=" + signature
-	result, err := httpClient(urlstr)
+	result, err = httpClient(urlBuilder(u.GetURL(credential), u.Name, u.SubName)+"?"+paramstr+"&sign="+signature, u.APIConfig.Timeout)
 	if err != nil {
 		return "", err
 	}
 	return result, nil
 }
 
-func (c *universeHeWeatherAPI) GetURL(credential *Credential) (URL string) {
+func (u *universeHeWeatherAPI) GetURL(credential *Credential) (url string) {
+	if u.isGeo {
+		return "https://geoapi.qweather.net/v2/"
+	}
 	if credential.IsBusiness {
-		return "https://api.qweather.net/v7"
+		return "https://api.qweather.com/v7"
 	}
-	return "https://devapi.qweather.net/v7"
-
-}
-
-func (c *geoAPI) Run(credential *Credential, config *ClientConfig) (Result string, err error) {
-	map1 := mapBuilder(config)
-	var map2 = make(map[string]string)
-	for k, v := range map1 {
-		if map2[k] == "" {
-			map2[k] = v
-		}
-	}
-	for k, v := range c.Parameter {
-		if map2[k] == "" {
-			map2[k] = v
-		}
-	}
-	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
-	urlstr := urlBuilder(c.GetURL(), c.Name, c.SubName) + "?" + paramstr + "&sign=" + signature
-	result, err := httpClient(urlstr)
-	if err != nil {
-		return "", err
-	}
-	return result, nil
-}
-
-func (c *geoAPI) GetURL() (URL string) {
-	return "https://geoapi.qweather.net/v2/"
+	return "https://devapi.qweather.com/v7"
 }
 
 func urlBuilder(url, name, subName string) string {
 	return fmt.Sprintf("%s/%s/%s", url, name, subName)
 }
-func mapBuilder(config *ClientConfig) (param map[string]string) {
-	p := make(map[string]string)
-	if config == nil {
-		return
-	}
-	c := *config
-	rv := reflect.ValueOf(c)
-	rt := reflect.TypeOf(c)
-	num := rv.NumField()
-	for i := 0; i < num; i++ {
-		p[rt.Field(i).Tag.Get("HeWea")] = rv.Field(i).String()
-	}
-	return p
-}
 
-//GetSignature 和风天气签名生成算法-Golang版本
+// GetSignature 和风天气签名生成算法-Golang版本
 func GetSignature(publicID, key string, param map[string]string) (paramstr, signature string) {
 	sa := []string{}
 	for k, v := range param {
@@ -135,9 +139,9 @@ func GetSignature(publicID, key string, param map[string]string) (paramstr, sign
 	return paramstr, fmt.Sprintf("%x", md5c.Sum(nil))
 }
 
-func httpClient(address string) (result string, err error) {
+func httpClient(address string, timeout time.Duration) (result string, err error) {
 	httpc := http.Client{
-		Timeout: 15 * time.Second,
+		Timeout: timeout,
 	}
 	req, err := http.NewRequest("GET", address, nil)
 	if err != nil {
