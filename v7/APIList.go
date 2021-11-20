@@ -7,7 +7,7 @@ type HeWeatherAPI interface {
 	// Run 执行API
 	Run(credential *Credential) (Result string, err error)
 	// GetURL 获取API链接
-	GetURL(credential *Credential) (URL string)
+	getURL(credential *Credential) (URL string)
 	// SetAPIConfig 设置API配置
 	SetAPIConfig(config *APIConfig)
 }

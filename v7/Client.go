@@ -100,14 +100,14 @@ func (u *universeHeWeatherAPI) Run(credential *Credential) (result string, err e
 		}
 	}
 	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
-	result, err = httpClient(urlBuilder(u.GetURL(credential), u.Name, u.SubName)+"?"+paramstr+"&sign="+signature, u.APIConfig.Timeout)
+	result, err = httpClient(urlBuilder(u.getURL(credential), u.Name, u.SubName)+"?"+paramstr+"&sign="+signature, u.APIConfig.Timeout)
 	if err != nil {
 		return "", err
 	}
 	return result, nil
 }
 
-func (u *universeHeWeatherAPI) GetURL(credential *Credential) (url string) {
+func (u *universeHeWeatherAPI) getURL(credential *Credential) (url string) {
 	if u.isGeo {
 		return "https://geoapi.qweather.net/v2/"
 	}
