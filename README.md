@@ -28,22 +28,22 @@ package main
 import hewea "github.com/Ink-33/go-heweather/v7"
 
 func main() {
-	var publicID = "your public ID"
-	var key = "your key"
-	// 免费开发版为false，商业共享版与商业高性能版均为true
-	var isBusiness = false
-	// 创建一个安全凭证
-	credential := hewea.NewCredential(publicID, key, isBusiness)
-	// 要查询的地址
+    var publicID = "your public ID"
+    var key = "your key"
+    // 免费开发版为false，商业共享版与商业高性能版均为true
+    var isBusiness = false
+    // 创建一个安全凭证
+    credential := hewea.NewCredential(publicID, key, isBusiness)
+    // 要查询的地址
     var location = "101010100"
     // 新建一个实时天气查询实例
-	client := hewea.NewRealTimeWeatherClient(location)
-	// 运行
-	rep, err := client.Run(credential)
-	if err != nil {
-		panic(err) // 也可以自行进行错误处理
-	}
-	println(rep)
+    client := hewea.NewRealTimeWeatherClient(location)
+    // 运行
+    rep, err := client.Run(credential)
+    if err != nil {
+        panic(err) // 也可以自行进行错误处理
+    }
+    println(rep)
 }
 
 ```
@@ -52,29 +52,29 @@ func main() {
 ### 高级篇
 您还可以通过以下方法对api进行定制
 ``` go
-	var location = "101010100"
-	// 查询时间段
+    var location = "101010100"
+    // 查询时间段
     var duration = "now"
     // 新建一个空气质量查询实例
-	client, err := hewea.NewAirQualityClient(location, duration)
-	if err != nil {
-		panic(err) // 此处返回错误代表您填入了一个错误的duration
-	}
-	// 此处新建一个请求实例配置。
-	// 各api支持的配置请参考https://dev.heweather.com/docs/api
-	// 本结构体支持的配置请参考GoDoc
-	ac := hewea.NewAPIConfig()
-	// 设置请求超时时间，不设置则默认为15s
-	ac.SetTimeout(3 * time.Second)
-	// 请注意，您要请求的api并不一定支持全部配置，请您按需填写
-	ac.SetLanguage("cn")
-	client.SetAPIConfig(ac)
-	// 运行
-	rep, err := client.Run(credential, cpf)
-	if err != nil {
-		panic(err) // 也可以自行进行错误处理
-	}
-	println(rep)
+    client, err := hewea.NewAirQualityClient(location, duration)
+    if err != nil {
+        panic(err) // 此处返回错误代表您填入了一个错误的duration
+    }
+    // 此处新建一个请求实例配置。
+    // 各api支持的配置请参考https://dev.heweather.com/docs/api
+    // 本结构体支持的配置请参考GoDoc
+    ac := hewea.NewAPIConfig()
+    // 设置请求超时时间，不设置则默认为15s
+    ac.SetTimeout(3 * time.Second)
+    // 请注意，您要请求的api并不一定支持全部配置，请您按需填写
+    ac.SetLanguage("cn")
+    client.SetAPIConfig(ac)
+    // 运行
+    rep, err := client.Run(credential, cpf)
+    if err != nil {
+        panic(err) // 也可以自行进行错误处理
+    }
+    println(rep)
 }
 
 ```
