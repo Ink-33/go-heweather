@@ -5,19 +5,21 @@ import "time"
 // HeWeatherAPI 和风天气v7API通用接口
 type HeWeatherAPI interface {
 	// Run 执行API
-	Run(credential *Credential) (Result string, err error)
+	Run(credential *Credential) (result string, err error)
 	// GetURL 获取API链接
-	getURL(credential *Credential) (URL string)
-	// SetAPIConfig 设置API配置
-	SetAPIConfig(config *APIConfig)
+	getURL(credential *Credential) (url string)
+	// SetAPIOptionParam 设置API可选参数
+	SetAPIOptionParam(config map[string]string)
+	// SetTimeout 设置超时时间
+	SetTimeout(timeout time.Duration)
 }
 
 type universeHeWeatherAPI struct {
-	Name      string
-	SubName   string
-	Parameter map[string]string
-	APIConfig *APIConfig
 	isGeo     bool
+	Name      string
+	Parameter map[string]string
+	SubName   string
+	Timeout   time.Duration
 }
 
 // NewClientErr 创建查询实例时返回的错误
@@ -29,20 +31,15 @@ func (e *NewClientErr) Error() string {
 	return e.Reason
 }
 
-// SetAPIConfig 设置API配置
-func (u *universeHeWeatherAPI) SetAPIConfig(config *APIConfig) {
-	u.APIConfig = config
-}
-
 // NewGeoCityClient 创建一个城市信息搜索实例。
 // https://dev.heweather.com/docs/api/geo#%E5%9F%8E%E5%B8%82%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
 func NewGeoCityClient(location string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "city",
-		SubName:   "lookup",
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     true,
+		Name:      "city",
+		Parameter: map[string]string{"location": location},
+		SubName:   "lookup",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -50,11 +47,11 @@ func NewGeoCityClient(location string) (client HeWeatherAPI) {
 // https://dev.heweather.com/docs/api/geo#%E7%83%AD%E9%97%A8%E5%9F%8E%E5%B8%82%E6%9F%A5%E8%AF%A2
 func NewGeoTopCityClient() (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "city",
-		SubName:   "top",
-		Parameter: map[string]string{},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     true,
+		Name:      "city",
+		Parameter: map[string]string{},
+		SubName:   "top",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -63,11 +60,11 @@ func NewGeoTopCityClient() (client HeWeatherAPI) {
 // https://dev.heweather.com/docs/api/geo#poi%E4%BF%A1%E6%81%AF%E6%90%9C%E7%B4%A2
 func NewGeoPOIClient(location string, poiType string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "poi",
-		SubName:   "lookup",
-		Parameter: map[string]string{"location": location, "type": poiType},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     true,
+		Name:      "poi",
+		Parameter: map[string]string{"location": location, "type": poiType},
+		SubName:   "lookup",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -76,11 +73,11 @@ func NewGeoPOIClient(location string, poiType string) (client HeWeatherAPI) {
 // https://dev.heweather.com/docs/api/geo#poi%E8%8C%83%E5%9B%B4%E6%90%9C%E7%B4%A2
 func NewGeoPOIRangeClient(location string, poiType string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "poi",
-		SubName:   "range",
-		Parameter: map[string]string{"location": location, "type": poiType},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     true,
+		Name:      "poi",
+		Parameter: map[string]string{"location": location, "type": poiType},
+		SubName:   "range",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -88,11 +85,11 @@ func NewGeoPOIRangeClient(location string, poiType string) (client HeWeatherAPI)
 // https://dev.heweather.com/docs/api/weather
 func NewRealTimeWeatherClient(location string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "weather",
-		SubName:   "now",
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "weather",
+		Parameter: map[string]string{"location": location},
+		SubName:   "now",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -113,11 +110,11 @@ func NewWeatherForecastClient(location string, duration string) (client HeWeathe
 		return nil, err
 	}
 	return &universeHeWeatherAPI{
-		Name:      "weather",
-		SubName:   dr,
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "weather",
+		Parameter: map[string]string{"location": location},
+		SubName:   dr,
+		Timeout:   15 * time.Second,
 	}, nil
 }
 
@@ -125,11 +122,11 @@ func NewWeatherForecastClient(location string, duration string) (client HeWeathe
 // https://dev.heweather.com/docs/api/minutely
 func NewMinutelyClient(location string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "minutely",
-		SubName:   "5m",
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "minutely",
+		Parameter: map[string]string{"location": location},
+		SubName:   "5m",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -142,11 +139,11 @@ func NewAirQualityClient(location, duration string) (client HeWeatherAPI, err er
 		return nil, err
 	}
 	return &universeHeWeatherAPI{
-		Name:      "air",
-		SubName:   duration,
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "air",
+		Parameter: map[string]string{"location": location},
+		SubName:   duration,
+		Timeout:   15 * time.Second,
 	}, nil
 }
 
@@ -154,11 +151,11 @@ func NewAirQualityClient(location, duration string) (client HeWeatherAPI, err er
 // https://dev.heweather.com/docs/api/warning
 func NewWarningClient(location string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "warning",
-		SubName:   "now",
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "warning",
+		Parameter: map[string]string{"location": location},
+		SubName:   "now",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -167,11 +164,11 @@ func NewWarningClient(location string) (client HeWeatherAPI) {
 // https://dev.qeweather.com/docs/api/warning
 func NewWarningListClient(warningRange string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "warning",
-		SubName:   "list",
-		Parameter: map[string]string{"range": warningRange},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "warning",
+		Parameter: map[string]string{"range": warningRange},
+		SubName:   "list",
+		Timeout:   15 * time.Second,
 	}
 }
 
@@ -183,11 +180,11 @@ func NewLiveIndexClient(location, indexType, duration string) (client HeWeatherA
 		return nil, err
 	}
 	return &universeHeWeatherAPI{
-		Name:      "indices",
-		SubName:   duration,
-		Parameter: map[string]string{"location": location, "type": indexType},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "indices",
+		Parameter: map[string]string{"location": location, "type": indexType},
+		SubName:   duration,
+		Timeout:   15 * time.Second,
 	}, nil
 }
 
@@ -199,11 +196,11 @@ func NewWeatherPOIClient(location, duration string) (client HeWeatherAPI, err er
 		return nil, err
 	}
 	return &universeHeWeatherAPI{
-		Name:      "weather-poi",
-		SubName:   duration,
-		Parameter: map[string]string{"location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "weather-poi",
+		Parameter: map[string]string{"location": location},
+		SubName:   duration,
+		Timeout:   15 * time.Second,
 	}, nil
 }
 
@@ -216,11 +213,11 @@ func NewHistoricalClient(location, date, historicalType string) (client HeWeathe
 		return nil, err
 	}
 	return &universeHeWeatherAPI{
-		Name:      "historical",
-		SubName:   historicalType,
-		Parameter: map[string]string{"date": date, "location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "historical",
+		Parameter: map[string]string{"date": date, "location": location},
+		SubName:   historicalType,
+		Timeout:   15 * time.Second,
 	}, nil
 }
 
@@ -229,10 +226,10 @@ func NewHistoricalClient(location, date, historicalType string) (client HeWeathe
 // https://dev.heweather.com/docs/api/astronomy
 func NewSunandMoonClient(location, date string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
-		Name:      "astronomy",
-		SubName:   "sunmoon",
-		Parameter: map[string]string{"date": date, "location": location},
-		APIConfig: &APIConfig{Timeout: 15 * time.Second},
 		isGeo:     false,
+		Name:      "astronomy",
+		Parameter: map[string]string{"date": date, "location": location},
+		SubName:   "sunmoon",
+		Timeout:   15 * time.Second,
 	}
 }

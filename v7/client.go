@@ -3,7 +3,7 @@ package v7
 import (
 	"crypto/md5"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sort"
 	"strconv"
@@ -18,64 +18,6 @@ type Credential struct {
 	IsBusiness bool
 }
 
-// APIConfig 用于配置天气API的各种配置
-type APIConfig struct {
-	p       map[string]string // 参数
-	Timeout time.Duration     // 超时时间
-}
-
-// NewAPIConfig 创建一个API配置
-func NewAPIConfig() *APIConfig {
-	return &APIConfig{
-		p: make(map[string]string),
-	}
-}
-
-// SetLanguage 设置语言
-func (c *APIConfig) SetLanguage(lang string) {
-	if c.p == nil {
-		c.p = make(map[string]string)
-	}
-	c.p["lang"] = lang
-}
-
-// SetUnit 设置单位
-func (c *APIConfig) SetUnit(unit string) {
-	if c.p == nil {
-		c.p = make(map[string]string)
-	}
-	c.p["unit"] = unit
-}
-
-// SetAdm 设置行政区划
-func (c *APIConfig) SetAdm(adm string) {
-	if c.p == nil {
-		c.p = make(map[string]string)
-	}
-	c.p["adm"] = adm
-}
-
-// SetRange 设置范围
-func (c *APIConfig) SetRange(rangeStr string) {
-	if c.p == nil {
-		c.p = make(map[string]string)
-	}
-	c.p["range"] = rangeStr
-}
-
-// SetNumber 设置数量
-func (c *APIConfig) SetNumber(number string) {
-	if c.p == nil {
-		c.p = make(map[string]string)
-	}
-	c.p["number"] = number
-}
-
-// SetTimeout 设置超时时间
-func (c *APIConfig) SetTimeout(timeout time.Duration) {
-	c.Timeout = timeout
-}
-
 // NewCredential 创建一个和风天气凭证
 func NewCredential(publicID, key string, isBusiness bool) (credential *Credential) {
 	credential = &Credential{
@@ -87,20 +29,8 @@ func NewCredential(publicID, key string, isBusiness bool) (credential *Credentia
 }
 
 func (u *universeHeWeatherAPI) Run(credential *Credential) (result string, err error) {
-	map1 := u.APIConfig.p
-	var map2 = make(map[string]string)
-	for k, v := range map1 {
-		if map2[k] == "" {
-			map2[k] = v
-		}
-	}
-	for k, v := range u.Parameter {
-		if map2[k] == "" {
-			map2[k] = v
-		}
-	}
-	paramstr, signature := GetSignature(credential.PublicID, credential.Key, map2)
-	result, err = httpClient(urlBuilder(u.getURL(credential), u.Name, u.SubName)+"?"+paramstr+"&sign="+signature, u.APIConfig.Timeout)
+	paramstr, signature := GetSignature(credential.PublicID, credential.Key, u.Parameter)
+	result, err = httpClient(urlBuilder(u.getURL(credential), u.Name, u.SubName)+"?"+paramstr+"&sign="+signature, u.Timeout)
 	if err != nil {
 		return "", err
 	}
@@ -154,7 +84,7 @@ func httpClient(address string, timeout time.Duration) (result string, err error
 		return "", err
 	}
 	defer rep.Body.Close()
-	content, err := ioutil.ReadAll(rep.Body)
+	content, err := io.ReadAll(rep.Body)
 	if err != nil {
 		return "", err
 	}

@@ -53,28 +53,27 @@ func main() {
 您还可以通过以下方法对api进行定制
 ``` go
     var location = "101010100"
-    // 查询时间段
-    var duration = "now"
-    // 新建一个空气质量查询实例
-    client, err := hewea.NewAirQualityClient(location, duration)
-    if err != nil {
-        panic(err) // 此处返回错误代表您填入了一个错误的duration
-    }
-    // 此处新建一个请求实例配置。
-    // 各api支持的配置请参考https://dev.heweather.com/docs/api
-    // 本结构体支持的配置请参考GoDoc
-    ac := hewea.NewAPIConfig()
-    // 设置请求超时时间，不设置则默认为15s
-    ac.SetTimeout(3 * time.Second)
-    // 请注意，您要请求的api并不一定支持全部配置，请您按需填写
-    ac.SetLanguage("cn")
-    client.SetAPIConfig(ac)
-    // 运行
-    rep, err := client.Run(credential, cpf)
-    if err != nil {
-        panic(err) // 也可以自行进行错误处理
-    }
-    println(rep)
+	// 查询时间段
+	var duration = "now"
+	// 新建一个空气质量查询实例
+	client, err := hewea.NewAirQualityClient(location, duration)
+	if err != nil {
+		panic(err) // 此处返回错误代表您填入了一个错误的duration
+	}
+	// 设置请求超时时间，不设置则默认为15s
+	client.SetTimeout(3 * time.Second)
+
+	// 此处新建一个map，用于添加api可选参数。
+	// 各api支持的可选参数请参考https://dev.heweather.com/docs/api
+	op := map[string]string{"lang": "en"}
+
+	client.SetAPIOptionParam(op)
+	// 运行
+	rep, err := client.Run(credential)
+	if err != nil {
+		panic(err) // 也可以自行进行错误处理
+	}
+	println(rep)
 }
 
 ```

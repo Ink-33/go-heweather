@@ -1,3 +1,3 @@
 module github.com/Ink-33/go-heweather
 
-go 1.15
+go 1.17
