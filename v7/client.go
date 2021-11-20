@@ -84,7 +84,6 @@ func httpClient(address string, timeout time.Duration) (result string, err error
 	}
 	defer rep.Body.Close()
 	content, err := io.ReadAll(rep.Body)
-	println(rep.Proto, rep.Status)
 	if err != nil {
 		return "", err
 	}
