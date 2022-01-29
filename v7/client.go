@@ -41,10 +41,19 @@ func (u *universeHeWeatherAPI) getURL(credential *Credential) (url string) {
 	if u.isGeo {
 		return "https://geoapi.qweather.net/v2/"
 	}
+	if u.CustomAPIAddress != "" {
+		return u.CustomAPIAddress
+	}
 	if credential.IsBusiness {
 		return "https://api.qweather.com/v7"
 	}
 	return "https://devapi.qweather.com/v7"
+}
+
+// GetFullURL 获取完整的API链接
+func (u *universeHeWeatherAPI) GetFullURL(credential *Credential) (url string) {
+	paramstr, signature := GetSignature(credential.PublicID, credential.Key, u.Parameter)
+	return urlBuilder(u.getURL(credential), u.Name, u.SubName) + "?" + paramstr + "&sign=" + signature
 }
 
 func urlBuilder(url, name, subName string) string {
@@ -59,8 +68,7 @@ func GetSignature(publicID, key string, param map[string]string) (paramstr, sign
 			sa = append(sa, k+"="+v)
 		}
 	}
-	sa = append(sa, "t="+strconv.FormatInt(time.Now().Unix(), 10))
-	sa = append(sa, "username="+publicID)
+	sa = append(sa, "t="+strconv.FormatInt(time.Now().Unix(), 10), "username="+publicID)
 	sort.Strings(sa)
 	paramstr = strings.Join(sa, "&")
 	md5c := md5.New()
