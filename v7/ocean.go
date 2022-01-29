@@ -2,7 +2,7 @@ package v7
 
 import "time"
 
-// NewTideClient 创建一个潮汐查询实例。
+// NewOceanTideClient 创建一个潮汐查询实例。
 // https://dev.qweather.com/docs/api/ocean/tide/
 func NewOceanTideClient(location, date string) (client HeWeatherAPI) {
 	return &universeHeWeatherAPI{
