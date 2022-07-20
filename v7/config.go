@@ -17,7 +17,6 @@ func (u *universeHeWeatherAPI) SetAPIOptionParam(config map[string]string) {
 			u.Parameter[k] = v
 		}
 	}
-
 }
 
 // SetTimeout 设置超时时间

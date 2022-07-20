@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -39,7 +40,7 @@ func (u *universeHeWeatherAPI) Run(credential *Credential) (result string, err e
 
 func (u *universeHeWeatherAPI) getURL(credential *Credential) (url string) {
 	if u.isGeo {
-		return "https://geoapi.qweather.net/v2/"
+		return "https://geoapi.qweather.net/v2"
 	}
 	if u.CustomAPIAddress != "" {
 		return u.CustomAPIAddress
@@ -63,17 +64,24 @@ func urlBuilder(url, name, subName string) string {
 // GetSignature 和风天气签名生成算法-Golang版本
 func GetSignature(publicID, key string, param map[string]string) (paramstr, signature string) {
 	sa := []string{}
+	escapesa := []string{}
 	for k, v := range param {
 		if v != "" {
 			sa = append(sa, k+"="+v)
+			escapesa = append(escapesa, k+"="+url.QueryEscape(v))
 		}
 	}
-	sa = append(sa, "t="+strconv.FormatInt(time.Now().Unix(), 10), "username="+publicID)
+
+	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	sa = append(sa, "t="+timestamp, "publicid="+publicID)
+	escapesa = append(escapesa, "t="+timestamp, "publicid="+publicID)
 	sort.Strings(sa)
-	paramstr = strings.Join(sa, "&")
+	sort.Strings(escapesa)
+
+	paramstr = strings.Join(escapesa, "&")
 	md5c := md5.New()
 	md5c.Reset()
-	_, _ = md5c.Write([]byte(paramstr + key))
+	_, _ = md5c.Write([]byte(strings.Join(sa, "&") + key))
 	return paramstr, fmt.Sprintf("%x", md5c.Sum(nil))
 }
 
