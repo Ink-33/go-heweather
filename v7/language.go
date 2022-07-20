@@ -24,6 +24,7 @@ const (
 	Malay              = "ms"
 	Norwegian          = "nb"
 	Polish             = "pl"
+	Portuguese         = "pt"
 	Russian            = "ru"
 	SimplifiedChinese  = "zh-hans"
 	Spanish            = "es"
